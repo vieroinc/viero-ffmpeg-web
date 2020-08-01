@@ -81,7 +81,11 @@ const strList2Ptr = (strList) => {
   return listPtr;
 };
 
-const load = () => mergedEnsure();
+const load = ({ wasmUrl }) => {
+  // eslint-disable-next-line no-underscore-dangle, no-restricted-globals
+  self._WASM_URL = wasmUrl;
+  return mergedEnsure();
+};
 
 const ffmpeg = (args) => mergedEnsure()
   .then(mergedSyncfs)
@@ -179,8 +183,8 @@ const rm = (name) => mergedEnsure()
 const ls = () => mergedEnsure()
   .then(() => {
     try {
-      const ephemeral = EMKIT.FS.lookupPath('/ephemeral');
-      const permanent = EMKIT.FS.lookupPath('/permanent');
+      const ephemeral = EMKIT.FS.lookupPath(FFCommon.pathOf(FFCommon.DIRECTORY.EPHEMERAL));
+      const permanent = EMKIT.FS.lookupPath(FFCommon.pathOf(FFCommon.DIRECTORY.PERMANENT));
       return {
         ephemeral: Object.keys(ephemeral.node.contents),
         permanent: Object.keys(permanent.node.contents),
@@ -197,7 +201,11 @@ const op = {
 // eslint-disable-next-line no-restricted-globals
 self.addEventListener('message', (evt) => {
   if (!op[evt.data.exec]) {
-    // ERROR
+    postMessage({
+      err: new VieroError('VieroFFMpegWebWorker', 957313),
+      job: evt.data.job,
+    });
+    return;
   }
   op[evt.data.exec](evt.data).then((res) => postMessage({
     ...res,

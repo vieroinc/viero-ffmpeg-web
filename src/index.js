@@ -45,10 +45,8 @@ export class VieroFFMpegEnvironment {
   /**
    * Loads the environment. Might take some time to complete.
    */
-  static load() {
-    return executeJob({ exec: 'load' }).then((result) => {
-      debugger;
-    });
+  static load(wasmUrl) {
+    return executeJob({ exec: 'load', wasmUrl });
   }
 
   /**
@@ -58,9 +56,7 @@ export class VieroFFMpegEnvironment {
    * @param {Buffer} buffer the buffer to push
    */
   static fpush(filePath, buffer) {
-    return executeJob({ exec: 'fpush', filePath, buffer }).then((result) => {
-      debugger;
-    });
+    return executeJob({ exec: 'fpush', filePath, buffer });
   }
 
   /**
@@ -74,10 +70,7 @@ export class VieroFFMpegEnvironment {
   static fpull(filePath, offset, length) {
     return executeJob({
       exec: 'fpull', filePath, offset, length,
-    }).then((result) => {
-      debugger;
-      return result.err || result.buffer;
-    });
+    }).then((result) => result.err || result.buffer);
   }
 
   /**
@@ -85,10 +78,7 @@ export class VieroFFMpegEnvironment {
    * @param {*} filePath the filePath in the environment
    */
   static file(filePath) {
-    return executeJob({ exec: 'file', filePath }).then((result) => {
-      debugger;
-      return result;
-    });
+    return executeJob({ exec: 'file', filePath });
   }
 
   /**
@@ -96,9 +86,7 @@ export class VieroFFMpegEnvironment {
    * @param {*} filePath the filePath in the environment
    */
   static rm(filePath) {
-    return executeJob({ exec: 'rm', filePath }).then((result) => {
-      debugger;
-    });
+    return executeJob({ exec: 'rm', filePath });
   }
 
   /**
@@ -106,10 +94,7 @@ export class VieroFFMpegEnvironment {
    * ephemeral and permanent.
    */
   static ls() {
-    return executeJob({ exec: 'ls' }).then((result) => {
-      debugger;
-      return result;
-    });
+    return executeJob({ exec: 'ls' });
   }
 
   /**
@@ -118,9 +103,6 @@ export class VieroFFMpegEnvironment {
    * @param {*} args
    */
   static ffmpeg(args) {
-    return executeJob({ exec: 'ffmpeg', args }).then((result) => {
-      debugger;
-      return result;
-    });
+    return executeJob({ exec: 'ffmpeg', args });
   }
 }
