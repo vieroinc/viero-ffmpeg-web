@@ -15,16 +15,7 @@
  */
 
 export class VieroFFMpegEnvironmentCommon {
-  static pathOf(name, directory) {
-    if (!name) {
-      // ERROR
-    }
-    if (name.endsWith('/')) {
-      // ERROR
-    }
-    if (name.startsWith('/')) {
-      name = name.slice(1);
-    }
+  static pathOf(directory, name) {
     const pathComponents = [];
     switch (directory) {
       case VieroFFMpegEnvironmentCommon.DIRECTORY.PERMANENT:
@@ -36,30 +27,26 @@ export class VieroFFMpegEnvironmentCommon {
         // ERROR
       }
     }
-    pathComponents.push(`/${name}`);
+    if (name) {
+      if (name.startsWith('/')) {
+        // eslint-disable-next-line no-param-reassign
+        name = name.slice(1);
+      }
+      pathComponents.push(`/${name}`);
+    }
     return pathComponents.join('');
   }
 
   static filePathWithMeta(directory, meta) {
     const at = Date.now();
+    // eslint-disable-next-line no-param-reassign
     meta = { at, ...(meta || {}) };
-    const suffix = meta.ext ? `.${meta.ext}` : (meta.mime ? `.${this.parseMime(meta.mime).minor}` : '');
     const encoded = this.encodeMeta(JSON.stringify(meta));
-    return this.pathOf(directory, `${at}_${encoded}${suffix}`);
+    return this.pathOf(directory, `${at}_${encoded}`);
   }
 
   static metaFromFilePath(path) {
-    return JSON.parse(this.decodeMeta(path.split('/').pop().split('.')[0].split('_').pop()));
-  }
-
-  static parseMime(mime) {
-    const split = mime.split(';');
-    const typeSplit = split[0].split('/');
-    if (split.length === 1) {
-      return { major: typeSplit[0], minor: typeSplit[1] };
-    }
-    const codecsSplit = split[1].slice(7).split(',');
-    return { major: typeSplit[0], minor: typeSplit[1], codecs: codecsSplit };
+    return JSON.parse(this.decodeMeta(path.split('/').pop().split('_').pop()));
   }
 
   static encodeMeta(string) {

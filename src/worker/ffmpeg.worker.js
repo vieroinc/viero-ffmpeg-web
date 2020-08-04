@@ -87,7 +87,7 @@ const load = ({ wasmUrl }) => {
   return mergedEnsure();
 };
 
-const ffmpeg = (args) => mergedEnsure()
+const ffmpeg = ({ args }) => mergedEnsure()
   .then(mergedSyncfs)
   .then(() => new Promise((resolve) => {
     const ffargs = [WRAP.ffmpeg.cmd, '-hide_banner', ...args, '-loglevel', 'trace'];
@@ -103,21 +103,21 @@ const ffmpeg = (args) => mergedEnsure()
     mergedSyncfs().then(() => resolve({ out, err, thrown }));
   }));
 
-const fpush = (name, buffer) => mergedEnsure()
+const fpush = ({ filePath, buffer }) => mergedEnsure()
   .then(() => {
-    const stream = EMKIT.FS.open(name, 'a');
+    const stream = EMKIT.FS.open(filePath, 'a');
     EMKIT.FS.write(stream, buffer, 0, buffer.length);
     EMKIT.FS.close(stream);
     return mergedSyncfs();
   });
 
-const fpull = (name, offset, length) => mergedEnsure()
+const fpull = ({ filePath, offset, length }) => mergedEnsure()
   .then(() => {
     try {
       if (!offset && !length) {
-        return EMKIT.FS.readFile(name);
+        return EMKIT.FS.readFile(filePath);
       }
-      const stream = EMKIT.FS.open(name, 'r');
+      const stream = EMKIT.FS.open(filePath, 'r');
       const uint8 = new Uint8Array(length);
       EMKIT.FS.read(stream, uint8, 0, length, offset);
       EMKIT.FS.close(stream);
@@ -127,10 +127,10 @@ const fpull = (name, offset, length) => mergedEnsure()
     }
   });
 
-const file = (name) => mergedEnsure()
-  .then(() => ffmpeg(['-i', name]))
+const file = ({ filePath }) => mergedEnsure()
+  .then(() => ffmpeg(['-i', filePath]))
   .then(({ err }) => {
-    const stat = { name, container: {}, tracks: [] };
+    const stat = { filePath, container: {}, tracks: [] };
     let idx = 0;
     let inInput = false;
     for (; idx < err.length; idx += 1) {
@@ -170,10 +170,10 @@ const file = (name) => mergedEnsure()
     return stat;
   });
 
-const rm = (name) => mergedEnsure()
+const rm = ({ filePath }) => mergedEnsure()
   .then(() => {
     try {
-      EMKIT.FS.unlink(name);
+      EMKIT.FS.unlink(filePath);
     } catch (err) {
       throw new VieroError('VieroFFMpegWebWorker', 543057, { [VieroError.KEY.ERROR]: err });
     }
@@ -210,8 +210,11 @@ self.addEventListener('message', (evt) => {
   op[evt.data.exec](evt.data).then((res) => postMessage({
     ...res,
     job: evt.data.job,
-  })).catch((err) => postMessage({
-    err,
-    job: evt.data.job,
-  }));
+  })).catch((err) => {
+    log.error(err);
+    postMessage({
+      err,
+      job: evt.data.job,
+    });
+  });
 });

@@ -25,14 +25,14 @@
   },
   "module": "./index.js",
   "dependencies": {
-    "@viero/common": "^1.5.0"
+    "@viero/common": "^1.5.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.4",
-    "@babel/core": "^7.10.4",
-    "@babel/preset-env": "^7.10.4",
+    "@babel/core": "^7.11.0",
+    "@babel/preset-env": "^7.11.0",
     "copyfiles": "^2.3.0",
-    "eslint": "^7.5.0",
+    "eslint": "^7.6.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
     "ncp": "^2.0.0",
