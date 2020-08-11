@@ -113,17 +113,26 @@ const fpush = ({ filePath, buffer }) => mergedEnsure()
 
 const fpull = ({ filePath, offset, length }) => mergedEnsure()
   .then(() => {
+    if (length === 0) {
+      const uint8 = new Uint8Array(0);
+      return { fpull: uint8.buffer };
+    }
     try {
-      if (!offset && !length) {
-        return EMKIT.FS.readFile(filePath);
-      }
-      const stream = EMKIT.FS.open(filePath, 'r');
+      const stat = EMKIT.FS.stat(filePath);
+      // eslint-disable-next-line no-param-reassign
+      offset = offset || 0;
+      // eslint-disable-next-line no-param-reassign
+      length = length || stat.size;
+      // eslint-disable-next-line no-param-reassign
+      length = Math.min(length, length - offset);
+
       const uint8 = new Uint8Array(length);
+      const stream = EMKIT.FS.open(filePath, 'r');
       EMKIT.FS.read(stream, uint8, 0, length, offset);
       EMKIT.FS.close(stream);
-      return uint8.buffer;
+      return { fpull: uint8.buffer };
     } catch (err) {
-      return Promise.reject(new VieroError('VieroFFMpegWebWorker', 216661, { [VieroError.KEY.ERROR]: err }));
+      throw new VieroError('VieroFFMpegWebWorker', 216661, { [VieroError.KEY.ERROR]: err });
     }
   });
 
@@ -167,7 +176,7 @@ const file = ({ filePath }) => mergedEnsure()
         }
       }
     }
-    return stat;
+    return { file };
   });
 
 const rm = ({ filePath }) => mergedEnsure()
@@ -183,11 +192,15 @@ const rm = ({ filePath }) => mergedEnsure()
 const ls = () => mergedEnsure()
   .then(() => {
     try {
-      const ephemeral = EMKIT.FS.lookupPath(FFCommon.pathOf(FFCommon.DIRECTORY.EPHEMERAL));
-      const permanent = EMKIT.FS.lookupPath(FFCommon.pathOf(FFCommon.DIRECTORY.PERMANENT));
+      const ePath = FFCommon.pathOf(FFCommon.DIRECTORY.EPHEMERAL);
+      const pPath = FFCommon.pathOf(FFCommon.DIRECTORY.PERMANENT);
+      const ephemeral = EMKIT.FS.lookupPath(ePath);
+      const permanent = EMKIT.FS.lookupPath(pPath);
       return {
-        ephemeral: Object.keys(ephemeral.node.contents),
-        permanent: Object.keys(permanent.node.contents),
+        ls: [
+          ...Object.keys(ephemeral.node.contents).map((name) => `${ePath}/${name}`),
+          ...Object.keys(permanent.node.contents).map((name) => `${pPath}/${name}`),
+        ],
       };
     } catch (err) {
       throw new VieroError('VieroFFMpegWebWorker', 394403, { [VieroError.KEY.ERROR]: err });

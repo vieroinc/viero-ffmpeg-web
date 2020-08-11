@@ -21,13 +21,12 @@ import { VieroFFMpegEnvironment as FFEnv } from '..';
  * @param {*} mime
  * @param {*} filePath
  */
-export const createInMemoryMediaSourceObjectURL = (mime, filePath) => {
+export const createLoadedMediaSource = (mime, filePath, didOpenCallback) => {
   if (!window.MediaSource) {
     return null;
   }
   const sourceOpen = () => {
-    // eslint-disable-next-line no-use-before-define
-    URL.revokeObjectURL(objectURL);
+    if (didOpenCallback) didOpenCallback();
     // eslint-disable-next-line no-use-before-define
     const sb = ms.addSourceBuffer(mime);
     sb.addEventListener('updateend', () => {
@@ -37,12 +36,13 @@ export const createInMemoryMediaSourceObjectURL = (mime, filePath) => {
         ms.endOfStream();
       }
     });
-    FFEnv.fpull(filePath).then((buffer) => sb.appendBuffer(new Uint8Array(buffer)));
+    FFEnv.fpull(filePath).then((buffer) => {
+      sb.appendBuffer(new Uint8Array(buffer));
+    });
   };
   const ms = new MediaSource();
   ms.addEventListener('sourceopen', sourceOpen);
-  const objectURL = URL.createObjectURL(ms);
-  return objectURL;
+  return ms;
 };
 
 /**
@@ -51,7 +51,7 @@ export const createInMemoryMediaSourceObjectURL = (mime, filePath) => {
  * @param {*} filePath
  */
 // eslint-disable-next-line no-unused-vars
-export const createStreamingMediaSourceObjectURL = (mime, filePath) => {
+export const createStreamingMediaSource = (mime, filePath, didOpenCallback) => {
   if (!window.MediaSource) {
     return null;
   }

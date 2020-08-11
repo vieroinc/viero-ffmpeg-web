@@ -70,7 +70,7 @@ export class VieroFFMpegEnvironment {
   static fpull(filePath, offset, length) {
     return executeJob({
       exec: 'fpull', filePath, offset, length,
-    }).then((result) => result.err || result.buffer);
+    }).then((res) => res.fpull);
   }
 
   /**
@@ -78,7 +78,7 @@ export class VieroFFMpegEnvironment {
    * @param {*} filePath the filePath in the environment
    */
   static file(filePath) {
-    return executeJob({ exec: 'file', filePath });
+    return executeJob({ exec: 'file', filePath }).then((res) => res.file);
   }
 
   /**
@@ -94,7 +94,7 @@ export class VieroFFMpegEnvironment {
    * ephemeral and permanent.
    */
   static ls() {
-    return executeJob({ exec: 'ls' });
+    return executeJob({ exec: 'ls' }).then((res) => res.ls);
   }
 
   /**

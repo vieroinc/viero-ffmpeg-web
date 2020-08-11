@@ -1,6 +1,6 @@
 {
   "name": "@viero/ffmpeg-web",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Client side FFMpeg for web apps.",
   "homepage": "https://github.com/vieroinc/viero-ffmpeg-web",
   "contributors": [
@@ -20,7 +20,7 @@
     "build:wasm": "./scripts/build.sh",
     "lint": "eslint ./src",
     "build": "npm run lint && npm run clean && babel src -d ./dist --source-maps inline",
-    "dist": "npm run build && copyfiles package.json README.md LICENSE.md dist && copyfiles -u 1 src/worker/ffmpeg.js dist/",
+    "dist": "npm run build && copyfiles package.json README.md LICENSE.md dist && copyfiles -u 1 src/worker/ffmpeg.js dist/ && copyfiles res/ffmpeg.wasm dist/",
     "npmjs": "npm run dist && npm publish ./dist --access public"
   },
   "module": "./index.js",
