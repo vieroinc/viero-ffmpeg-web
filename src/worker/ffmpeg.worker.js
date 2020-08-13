@@ -130,7 +130,7 @@ const fpull = ({ filePath, offset, length }) => mergedEnsure()
       const stream = EMKIT.FS.open(filePath, 'r');
       EMKIT.FS.read(stream, uint8, 0, length, offset);
       EMKIT.FS.close(stream);
-      return { fpull: uint8.buffer };
+      return { fpull: uint8 };
     } catch (err) {
       throw new VieroError('VieroFFMpegWebWorker', 216661, { [VieroError.KEY.ERROR]: err });
     }
