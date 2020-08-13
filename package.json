@@ -1,6 +1,6 @@
 {
   "name": "@viero/ffmpeg-web",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Client side FFMpeg for web apps.",
   "homepage": "https://github.com/vieroinc/viero-ffmpeg-web",
   "contributors": [

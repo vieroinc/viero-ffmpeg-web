@@ -98,6 +98,14 @@ export class VieroFFMpegEnvironment {
   }
 
   /**
+   * Returns with a list of files in the environment broken down to
+   * ephemeral and permanent.
+   */
+  static mv(fromPath, toPath) {
+    return executeJob({ exec: 'mv', fromPath, toPath });
+  }
+
+  /**
    * Executes FFmpeg with the provided arguments. The stdout and the stderr is provided
    * upon return along with any errors thrown.
    * @param {*} args

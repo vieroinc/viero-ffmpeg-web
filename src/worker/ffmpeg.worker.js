@@ -207,8 +207,12 @@ const ls = () => mergedEnsure()
     }
   });
 
+const mv = ({ fromPath, toPath }) => fpull({ filePath: fromPath })
+  .then((res) => fpush({ filePath: toPath, buffer: res.fpull }))
+  .then(() => rm({ filePath: fromPath }));
+
 const op = {
-  load, fpush, fpull, file, rm, ls, ffmpeg,
+  load, fpush, fpull, file, rm, ls, mv, ffmpeg,
 };
 
 // eslint-disable-next-line no-restricted-globals
