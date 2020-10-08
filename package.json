@@ -1,6 +1,6 @@
 {
   "name": "@viero/ffmpeg-web",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Client side FFMpeg for web apps.",
   "homepage": "https://github.com/vieroinc/viero-ffmpeg-web",
   "contributors": [
@@ -25,18 +25,18 @@
   },
   "module": "./index.js",
   "dependencies": {
-    "@viero/common": "^1.5.3"
+    "@viero/common": "^1.6.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.4",
-    "@babel/core": "^7.11.0",
-    "@babel/preset-env": "^7.11.0",
-    "copyfiles": "^2.3.0",
-    "eslint": "^7.6.0",
+    "@babel/cli": "^7.11.6",
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "copyfiles": "^2.4.0",
+    "eslint": "^7.10.0",
     "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-import": "^2.22.1",
     "ncp": "^2.0.0",
-    "prettier": "^2.0.5",
+    "prettier": "^2.1.2",
     "rimraf": "^3.0.2"
   }
 }

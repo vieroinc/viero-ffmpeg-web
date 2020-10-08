@@ -17,35 +17,44 @@
 import { VieroError } from '@viero/common/error';
 import { VieroLog } from '@viero/common/log';
 import { merge } from '@viero/common/limit';
-import { VieroFFMpegEnvironmentCommon as FFCommon } from '../common';
+import {
+  pathBy, FFDIRECTORY, FFDELIMITER, isSupportedPath,
+} from '../common';
 import FFmpeg from './ffmpeg';
 
-const log = new VieroLog('ffmpeg/worker');
+const log = new VieroLog('FFMpegWorker');
 
 let EMKIT;
 let WRAP;
 
 const ensure = () => new Promise((resolve, reject) => {
   if (EMKIT) {
-    log.debug('env already initialised');
+    if (log.isDebug()) {
+      log.debug('env already initialised');
+    }
     resolve();
     return;
+  }
+  if (log.isDebug()) {
+    log.debug('initialising env');
   }
   FFmpeg().then((emkit) => {
     EMKIT = emkit;
     WRAP = {
       ffmpeg: { cmd: './ffmpeg', cwrap: EMKIT.cwrap('ffmpeg', 'number', ['number', 'number']) },
     };
-    EMKIT.FS.mkdir(FFCommon.pathOf(FFCommon.DIRECTORY.EPHEMERAL));
-    const permanent = FFCommon.pathOf(FFCommon.DIRECTORY.PERMANENT);
+    EMKIT.FS.mkdir(pathBy(FFDIRECTORY.EPHEMERAL));
+    const permanent = pathBy(FFDIRECTORY.PERMANENT);
     EMKIT.FS.mkdir(permanent);
     EMKIT.FS.mount(EMKIT.FS.filesystems.IDBFS, {}, permanent);
     EMKIT.FS.syncfs(true, (err) => {
       if (err) {
-        reject(new VieroError('VieroFFMpegWebWorker', 216661, { [VieroError.KEY.ERROR]: err }));
+        reject(new VieroError('VieroFFMpegWorker', 216661, { [VieroError.KEY.ERROR]: err }));
         return;
       }
-      log.debug('env initialised');
+      if (log.isDebug()) {
+        log.debug('env initialised');
+      }
       setImmediate(() => resolve());
     });
   });
@@ -54,7 +63,7 @@ const mergedEnsure = () => merge('ffwrapensure', ensure);
 
 const syncfs = () => new Promise((resolve, reject) => EMKIT.FS.syncfs((err) => {
   if (err) {
-    reject(new VieroError('VieroFFMpegWebWorker', 219218, { [VieroError.KEY.ERROR]: err }));
+    reject(new VieroError('VieroFFMpegWorker', 219218, { [VieroError.KEY.ERROR]: err }));
     return;
   }
   setImmediate(() => resolve());
@@ -81,6 +90,13 @@ const strList2Ptr = (strList) => {
   return listPtr;
 };
 
+const configure = ({ opts }) => {
+  if (opts.logLevel) {
+    VieroLog.level = opts.logLevel;
+  }
+  return Promise.resolve();
+};
+
 const load = ({ wasmUrl }) => {
   // eslint-disable-next-line no-underscore-dangle, no-restricted-globals
   self._WASM_URL = wasmUrl;
@@ -91,7 +107,9 @@ const ffmpeg = ({ args }) => mergedEnsure()
   .then(mergedSyncfs)
   .then(() => new Promise((resolve) => {
     const ffargs = [WRAP.ffmpeg.cmd, '-hide_banner', ...args, '-loglevel', 'trace'];
-    log.debug('ffmpeg', ffargs.join(' '));
+    if (log.isDebug()) {
+      log.debug('ffmpeg', ffargs.join(' '));
+    }
     let thrown;
     try {
       WRAP.ffmpeg.cwrap(ffargs.length, strList2Ptr(ffargs));
@@ -105,6 +123,9 @@ const ffmpeg = ({ args }) => mergedEnsure()
 
 const fpush = ({ filePath, buffer }) => mergedEnsure()
   .then(() => {
+    if (!isSupportedPath(filePath)) {
+      throw new VieroError('VieroFFMpegWorker', 286084);
+    }
     const stream = EMKIT.FS.open(filePath, 'a');
     EMKIT.FS.write(stream, buffer, 0, buffer.length);
     EMKIT.FS.close(stream);
@@ -113,6 +134,9 @@ const fpush = ({ filePath, buffer }) => mergedEnsure()
 
 const fpull = ({ filePath, offset, length }) => mergedEnsure()
   .then(() => {
+    if (!isSupportedPath(filePath)) {
+      throw new VieroError('VieroFFMpegWorker', 407013);
+    }
     if (length === 0) {
       const uint8 = new Uint8Array(0);
       return { fpull: uint8.buffer };
@@ -132,11 +156,16 @@ const fpull = ({ filePath, offset, length }) => mergedEnsure()
       EMKIT.FS.close(stream);
       return { fpull: uint8 };
     } catch (err) {
-      throw new VieroError('VieroFFMpegWebWorker', 216661, { [VieroError.KEY.ERROR]: err });
+      throw new VieroError('VieroFFMpegWorker', 216661, { [VieroError.KEY.ERROR]: err });
     }
   });
 
 const file = ({ filePath }) => mergedEnsure()
+  .then(() => {
+    if (!isSupportedPath(filePath)) {
+      throw new VieroError('VieroFFMpegWorker', 429956);
+    }
+  })
   .then(() => ffmpeg(['-i', filePath]))
   .then(({ err }) => {
     const stat = { filePath, container: {}, tracks: [] };
@@ -167,7 +196,7 @@ const file = ({ filePath }) => mergedEnsure()
                 break;
               }
               default: {
-                throw new VieroError('VieroFFMpegWebWorker', 470568);
+                throw new VieroError('VieroFFMpegWorker', 470568);
               }
             }
           }
@@ -181,45 +210,72 @@ const file = ({ filePath }) => mergedEnsure()
 
 const rm = ({ filePath }) => mergedEnsure()
   .then(() => {
+    if (!isSupportedPath(filePath)) {
+      throw new VieroError('VieroFFMpegWorker', 566630);
+    }
     try {
       EMKIT.FS.unlink(filePath);
     } catch (err) {
-      throw new VieroError('VieroFFMpegWebWorker', 543057, { [VieroError.KEY.ERROR]: err });
+      throw new VieroError('VieroFFMpegWorker', 543057, { [VieroError.KEY.ERROR]: err });
     }
     return mergedSyncfs();
   });
 
-const ls = () => mergedEnsure()
+const ls = ({ directory }) => mergedEnsure()
   .then(() => {
+    const directories = [];
+    if (directory) {
+      switch (directory) {
+        case FFDIRECTORY.EPHEMERAL:
+        case FFDIRECTORY.PERMANENT: {
+          directories.push(directory);
+          break;
+        }
+        default: {
+          throw new VieroError('VieroFFMpegWorker', 652318);
+        }
+      }
+    } else {
+      directories.push(...[FFDIRECTORY.EPHEMERAL, FFDIRECTORY.PERMANENT]);
+    }
     try {
-      const ePath = FFCommon.pathOf(FFCommon.DIRECTORY.EPHEMERAL);
-      const pPath = FFCommon.pathOf(FFCommon.DIRECTORY.PERMANENT);
+      const ePath = pathBy(FFDIRECTORY.EPHEMERAL);
+      const pPath = pathBy(FFDIRECTORY.PERMANENT);
       const ephemeral = EMKIT.FS.lookupPath(ePath);
       const permanent = EMKIT.FS.lookupPath(pPath);
       return {
         ls: [
-          ...Object.keys(ephemeral.node.contents).map((name) => `${ePath}/${name}`),
-          ...Object.keys(permanent.node.contents).map((name) => `${pPath}/${name}`),
+          ...Object.keys(ephemeral.node.contents).map((name) => `${ePath}${FFDELIMITER.PATH}${name}`),
+          ...Object.keys(permanent.node.contents).map((name) => `${pPath}${FFDELIMITER.PATH}${name}`),
         ],
       };
     } catch (err) {
-      throw new VieroError('VieroFFMpegWebWorker', 394403, { [VieroError.KEY.ERROR]: err });
+      throw new VieroError('VieroFFMpegWorker', 394403, { [VieroError.KEY.ERROR]: err });
     }
   });
 
-const mv = ({ fromPath, toPath }) => fpull({ filePath: fromPath })
+const mv = ({ fromPath, toPath }) => mergedEnsure()
+  .then(() => {
+    if (!isSupportedPath(fromPath)) {
+      throw new VieroError('VieroFFMpegWorker', 688566);
+    }
+    if (!isSupportedPath(toPath)) {
+      throw new VieroError('VieroFFMpegWorker', 276927);
+    }
+  })
+  .then(() => fpull({ filePath: fromPath }))
   .then((res) => fpush({ filePath: toPath, buffer: res.fpull }))
   .then(() => rm({ filePath: fromPath }));
 
 const op = {
-  load, fpush, fpull, file, rm, ls, mv, ffmpeg,
+  configure, load, fpush, fpull, file, rm, ls, mv, ffmpeg,
 };
 
 // eslint-disable-next-line no-restricted-globals
 self.addEventListener('message', (evt) => {
   if (!op[evt.data.exec]) {
     postMessage({
-      err: new VieroError('VieroFFMpegWebWorker', 957313),
+      err: new VieroError('VieroFFMpegWorker', 957313),
       job: evt.data.job,
     });
     return;
@@ -228,7 +284,9 @@ self.addEventListener('message', (evt) => {
     ...res,
     job: evt.data.job,
   })).catch((err) => {
-    log.error(err);
+    if (log.isError()) {
+      log.error(err);
+    }
     postMessage({
       err,
       job: evt.data.job,

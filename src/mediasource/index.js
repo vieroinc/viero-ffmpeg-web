@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-import { VieroFFMpegEnvironment as FFEnv } from '..';
+import { VieroFFMpeg as FF } from '..';
 
 /**
  *
@@ -36,7 +36,7 @@ export const createLoadedMediaSource = (mime, filePath, didOpenCallback) => {
         ms.endOfStream();
       }
     });
-    FFEnv.fpull(filePath).then((buffer) => {
+    FF.fpull(filePath).then((buffer) => {
       sb.appendBuffer(new Uint8Array(buffer));
     });
   };

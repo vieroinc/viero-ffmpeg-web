@@ -14,7 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+import { VieroLog } from '@viero/common/log';
 import FFWorker from './worker/ffmpeg.worker';
+
+const log = new VieroLog('VieroFFMpeg');
 
 const ffWorker = new FFWorker();
 
@@ -41,11 +44,24 @@ const executeJob = (params) => {
  * Simulates a shell kinda environment in the browser with basic file operations and
  * ffmpeg excution.
  */
-export class VieroFFMpegEnvironment {
+export class VieroFFMpeg {
+  /**
+   * Configures the worker.
+   */
+  static configure(opts) {
+    if (log.isDebug()) {
+      log.debug('configuring worker with', opts);
+    }
+    return executeJob({ exec: 'configure', opts });
+  }
+
   /**
    * Loads the environment. Might take some time to complete.
    */
   static load(wasmUrl) {
+    if (log.isDebug()) {
+      log.debug('loading from wasm url', wasmUrl);
+    }
     return executeJob({ exec: 'load', wasmUrl });
   }
 
@@ -56,6 +72,9 @@ export class VieroFFMpegEnvironment {
    * @param {Buffer} buffer the buffer to push
    */
   static fpush(filePath, buffer) {
+    if (log.isDebug()) {
+      log.debug('pushing', buffer.length, 'bytes to', filePath);
+    }
     return executeJob({ exec: 'fpush', filePath, buffer });
   }
 
@@ -68,6 +87,9 @@ export class VieroFFMpegEnvironment {
    * @param {Number} length length of the data returned
    */
   static fpull(filePath, offset, length) {
+    if (log.isDebug()) {
+      log.debug('pulling with offset', offset, 'and length', length, 'from', filePath);
+    }
     return executeJob({
       exec: 'fpull', filePath, offset, length,
     }).then((res) => res.fpull);
@@ -78,6 +100,9 @@ export class VieroFFMpegEnvironment {
    * @param {*} filePath the filePath in the environment
    */
   static file(filePath) {
+    if (log.isDebug()) {
+      log.debug('requesting file metada on', filePath);
+    }
     return executeJob({ exec: 'file', filePath }).then((res) => res.file);
   }
 
@@ -86,6 +111,9 @@ export class VieroFFMpegEnvironment {
    * @param {*} filePath the filePath in the environment
    */
   static rm(filePath) {
+    if (log.isDebug()) {
+      log.debug('removing', filePath);
+    }
     return executeJob({ exec: 'rm', filePath });
   }
 
@@ -93,8 +121,11 @@ export class VieroFFMpegEnvironment {
    * Returns with a list of files in the environment broken down to
    * ephemeral and permanent.
    */
-  static ls() {
-    return executeJob({ exec: 'ls' }).then((res) => res.ls);
+  static ls(directory) {
+    if (log.isDebug()) {
+      log.debug('listing content');
+    }
+    return executeJob({ exec: 'ls', directory }).then((res) => res.ls);
   }
 
   /**
@@ -102,6 +133,11 @@ export class VieroFFMpegEnvironment {
    * ephemeral and permanent.
    */
   static mv(fromPath, toPath) {
+    // eslint-disable-next-line no-debugger
+    debugger;
+    if (log.isDebug()) {
+      log.debug('moving from', fromPath, 'to', toPath);
+    }
     return executeJob({ exec: 'mv', fromPath, toPath });
   }
 
@@ -111,6 +147,9 @@ export class VieroFFMpegEnvironment {
    * @param {*} args
    */
   static ffmpeg(args) {
+    if (log.isDebug()) {
+      log.debug('calling ffmpeg', args);
+    }
     return executeJob({ exec: 'ffmpeg', args });
   }
 }
