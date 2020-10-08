@@ -133,8 +133,6 @@ export class VieroFFMpeg {
    * ephemeral and permanent.
    */
   static mv(fromPath, toPath) {
-    // eslint-disable-next-line no-debugger
-    debugger;
     if (log.isDebug()) {
       log.debug('moving from', fromPath, 'to', toPath);
     }

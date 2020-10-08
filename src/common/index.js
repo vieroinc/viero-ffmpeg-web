@@ -21,6 +21,7 @@ export const FFDIRECTORY = {
 
 export const FFDELIMITER = {
   PATH: '/',
+  EXTENSION: '.',
 };
 
 export const pathBy = (directory, fileName) => {
@@ -62,21 +63,22 @@ export const directoryOf = (path) => {
   return null;
 };
 
+export const isSupportedPath = (path) => !!directoryOf(path);
+
 export const fileNameOf = (path) => path.split(FFDELIMITER.PATH).pop();
 
 export const encodeMeta = (string) => encodeURIComponent(btoa(string)).split('%').join('-');
 
 export const decodeMeta = (encoded) => atob(decodeURIComponent(encoded.split('-').join('%')));
 
-// EX: static filePathWithMeta(directory, meta) {...
-export const fileNameBy = (meta, ext) => {
+export const fileNameBy = (meta, extension) => {
   const metaObj = meta || {};
   const modified = Date.now();
   const created = metaObj.created || modified;
   const metaMerged = { ...metaObj, created, modified };
   const encoded = encodeMeta(JSON.stringify(metaMerged));
-  const extWithDot = ext ? `.${ext}` : '';
-  return `${metaMerged.created}:${metaMerged.modified}:${encoded}${extWithDot}`;
+  const extensionWithDot = extension ? `${FFDELIMITER.EXTENSION}${extension}` : '';
+  return `${metaMerged.created}:${metaMerged.modified}:${encoded}${extensionWithDot}`;
 };
 
 // EX: static metaFromFileName(fileName) {...
@@ -87,4 +89,4 @@ export const metaOf = (something) => {
   return JSON.parse(decodeMeta(metaEncoded));
 };
 
-export const isSupportedPath = (path) => !!directoryOf(path);
+export const extensionOf = (something) => something.split(FFDELIMITER.EXTENSION).pop();

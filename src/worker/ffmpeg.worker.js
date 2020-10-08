@@ -18,7 +18,7 @@ import { VieroError } from '@viero/common/error';
 import { VieroLog } from '@viero/common/log';
 import { merge } from '@viero/common/limit';
 import {
-  pathBy, FFDIRECTORY, FFDELIMITER, isSupportedPath,
+  pathBy, isSupportedPath, FFDIRECTORY, FFDELIMITER,
 } from '../common';
 import FFmpeg from './ffmpeg';
 
@@ -239,16 +239,17 @@ const ls = ({ directory }) => mergedEnsure()
       directories.push(...[FFDIRECTORY.EPHEMERAL, FFDIRECTORY.PERMANENT]);
     }
     try {
-      const ePath = pathBy(FFDIRECTORY.EPHEMERAL);
-      const pPath = pathBy(FFDIRECTORY.PERMANENT);
-      const ephemeral = EMKIT.FS.lookupPath(ePath);
-      const permanent = EMKIT.FS.lookupPath(pPath);
-      return {
-        ls: [
-          ...Object.keys(ephemeral.node.contents).map((name) => `${ePath}${FFDELIMITER.PATH}${name}`),
-          ...Object.keys(permanent.node.contents).map((name) => `${pPath}${FFDELIMITER.PATH}${name}`),
-        ],
-      };
+      const list = directories.reduce((acc, aDirectory) => {
+        const path = pathBy(aDirectory);
+        // eslint-disable-next-line no-unused-vars
+        const stat = EMKIT.FS.lookupPath(path);
+        acc.push(...Object.keys(stat.node.contents).map((name) => ({
+          path: `${path}${FFDELIMITER.PATH}${name}`,
+          size: stat.node.contents[name].contents.length,
+        })));
+        return acc;
+      }, []);
+      return { ls: list };
     } catch (err) {
       throw new VieroError('VieroFFMpegWorker', 394403, { [VieroError.KEY.ERROR]: err });
     }
