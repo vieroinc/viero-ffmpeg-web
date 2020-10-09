@@ -1,6 +1,6 @@
 {
   "name": "@viero/ffmpeg-web",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Client side FFMpeg for web apps.",
   "homepage": "https://github.com/vieroinc/viero-ffmpeg-web",
   "contributors": [
@@ -25,7 +25,7 @@
   },
   "module": "./index.js",
   "dependencies": {
-    "@viero/common": "^1.6.1"
+    "@viero/common": "^1.6.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.11.6",
